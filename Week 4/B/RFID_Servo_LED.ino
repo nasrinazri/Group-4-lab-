@@ -6,24 +6,22 @@
 #define RST_PIN         49           // Reset pin for RFID
 #define SS_PIN          53          // SS/SDA pin for RFID
 #define SERVO_PIN       3           // Servo control pin
-#define GREEN_LED_PIN   4           // Optional: LED for access granted
-#define RED_LED_PIN     5           // Optional: LED for access denied
+#define GREEN_LED_PIN   4           // Green LED
+#define RED_LED_PIN     5           // Red LED
 
-// Create instances
+// Instances
 MFRC522 rfid(SS_PIN, RST_PIN);     // Create MFRC522 instance
 Servo accessServo;                  // Create servo instance
 
-// Array of authorized cards (replace with your card UIDs)
-// Each UID is typically 4 bytes long
+// Array of authorized cards
 byte authorizedCards[][4] = {
-  {0x33, 0x36, 0x87, 0x1A},        // Replace with your card's UID
-  {0xAA, 0xBB, 0xCC, 0xDD}         // Add more cards as needed
+  {0x33, 0x36, 0x87, 0x1A} // Card for granted and tag for decline (Not Here Easier to code then making another function)
 };
 
 const int NUM_CARDS = sizeof(authorizedCards) / sizeof(authorizedCards[0]);
 
 void setup() {
-  Serial.begin(9600);               // Initialize serial communication
+  Serial.begin(9600);               
   SPI.begin();                      // Initialize SPI bus
   rfid.PCD_Init();                  // Initialize RFID reader
   
@@ -64,7 +62,7 @@ bool isAuthorizedCard(byte *cardUID) {
   return false;
 }
 
-bool compareUIDs(byte *uid1, byte *uid2) {
+bool compareUIDs(byte *uid1, byte *uid2) { //comparison algorithm
   for (int i = 0; i < 4; i++) {
     if (uid1[i] != uid2[i]) {
       return false;
@@ -80,7 +78,7 @@ void grantAccess() {
   
   // Move servo to open position
   accessServo.write(90);
-  delay(1000);                      // Keep open for 3 seconds
+  delay(1000);                      // Keep open for 1 seconds
   
   // Return to closed position
   accessServo.write(0);
