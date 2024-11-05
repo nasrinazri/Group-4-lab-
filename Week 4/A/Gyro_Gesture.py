@@ -55,16 +55,6 @@ class GestureDetector:
         elif gesture == self.NO_GESTURE:
             print("None")
 
-    def perform_gesture_action(self, gesture):
-        if gesture == self.GESTURE_ONE:
-            # Add your action for Gesture One here
-            # Example: print("Performing action for Gesture One")
-            pass
-        elif gesture == self.GESTURE_TWO:
-            # Add your action for Gesture Two here
-            # Example: print("Performing action for Gesture Two")
-            pass
-
     def close(self):
         self.ser.close()
         print("Connection closed")
