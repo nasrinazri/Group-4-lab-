@@ -8,7 +8,7 @@ private:
     int previousGesture;
     
     // Gesture detection thresholds
-    static const int ACCELERATION_THRESHOLD = 800;  // Adjust based on sensitivity needs
+    static const int ACCELERATION_THRESHOLD = 800;  // Sensitivity
     
     // Gesture types
     static const int NO_GESTURE = 0;
@@ -33,7 +33,7 @@ public:
     void update() {
         int currentGesture = detectGesture();
         
-        // Only print when gesture changes
+        // Gesture Update
         if (currentGesture != previousGesture) {
             printGesture(currentGesture);
             performGestureAction(currentGesture);
@@ -74,19 +74,6 @@ private:
                 break;
         }
     }
-    
-    void performGestureAction(int gesture) {
-        switch (gesture) {
-            case GESTURE_ONE:
-                // Add your action for Gesture One here
-                // Example: digitalWrite(LED_PIN, HIGH);
-                break;
-            case GESTURE_TWO:
-                // Add your action for Gesture Two here
-                // Example: digitalWrite(LED_PIN, LOW);
-                break;
-        }
-    }
 };
 
 // Global instance of gesture detector
@@ -99,5 +86,5 @@ void setup() {
 
 void loop() {
     gestureDetector.update();
-    delay(50);  // Small delay to prevent overwhelming the serial output
+    delay(50);  // Delay to prevent serial clot
 }
