@@ -7,7 +7,7 @@ void setup() {
   pinMode(upStartPin, INPUT_PULLUP);   // Using pullup for NO contact
   pinMode(downStopPin, INPUT_PULLUP);  // Using pullup for NC contact
   pinMode(ledPin, OUTPUT);
-  Serial.begin(9600);  // For debugging
+  Serial.begin(9600);  
 }
 
 void loop() {
