@@ -1,3 +1,5 @@
+// Slave Code Using UNO R3
+
 #include <Wire.h>
 
 const int tempPin = A0;           // LM35 sensor pin
