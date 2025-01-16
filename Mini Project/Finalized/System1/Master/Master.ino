@@ -7,7 +7,6 @@
 #include <Servo.h>
 #include <Wire.h>
 #include <Keypad.h>
-#include <LiquidCrystal_I2C.h>
 
 // Initialize Servo
 Servo washingMachineServo;
