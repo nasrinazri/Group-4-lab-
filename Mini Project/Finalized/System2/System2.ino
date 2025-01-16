@@ -1,62 +1,71 @@
-#include <Pixy.h>
-#include <LiquidCrystal_I2C.h>
-#include <NewPing.h>
-#include <SPI.h>
+// System 2: Washing Machine Cloth Checker
 
-// Pin definitions
-#define TRIGGER_PIN  22
-#define ECHO_PIN     23
-#define LED_PIN      13     // LED for object detection
-#define WHITE_LED_PIN 12    // New LED pin for white shirt detection
-#define MAX_DISTANCE 200
-#define MIN_BLOCK_SIZE 20
-#define SCAN_ATTEMPTS 3
+// Arduino IDE 2.3.4
 
-// Initialize objects
-Pixy pixy;
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+#include <Pixy.h>              // For the Pixy camera module to detect objects and colors
+#include <LiquidCrystal_I2C.h> // For the I2C LCD display
+#include <NewPing.h>           // For the ultrasonic distance sensor
+#include <SPI.h>               // Required for Pixy camera communication
 
-// Variables
-bool clothDetected = false;
-int whiteShirtSignature = 1;
-unsigned long lastDetectionTime = 0;
-const unsigned long DETECTION_TIMEOUT = 1000;
-bool isWhiteShirtDetected = false;
+// Define pins and constants for the system
+#define TRIGGER_PIN  22        // Ultrasonic sensor trigger pin
+#define ECHO_PIN     23        // Ultrasonic sensor echo pin
+#define LED_PIN      13        // LED indicator for object presence detection
+#define WHITE_LED_PIN 12       // LED indicator specifically for white shirt detection
+#define MAX_DISTANCE 200       // Maximum detection distance in centimeters
+#define MIN_BLOCK_SIZE 20      // Minimum size of detected object to be considered valid
+#define SCAN_ATTEMPTS 3        // Number of attempts to scan for white shirt
+
+// Initialize hardware objects
+Pixy pixy;                     // Create Pixy camera object
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Initialize LCD with address 0x27, 16 columns, 2 rows
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);  // Initialize ultrasonic sensor
+
+// System state variables
+bool clothDetected = false;    // Tracks if any object is currently detected
+int whiteShirtSignature = 1;   // Pixy camera signature ID for white shirt
+unsigned long lastDetectionTime = 0;  // Timestamp of last detection
+const unsigned long DETECTION_TIMEOUT = 1000;  // Time before allowing new detection (debouncing)
+bool isWhiteShirtDetected = false;    // Tracks if a white shirt is specifically detected
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(9600);          // Initialize serial communication for debugging
   
+  // Configure LED pins
   pinMode(LED_PIN, OUTPUT);
-  pinMode(WHITE_LED_PIN, OUTPUT);  // Initialize the new LED pin
+  pinMode(WHITE_LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
   digitalWrite(WHITE_LED_PIN, LOW);
   
+  // Initialize LCD display
   lcd.init();
   lcd.backlight();
   lcd.clear();
   lcd.print("System Ready");
   
-  pixy.init();
+  pixy.init();                 // Initialize Pixy camera
   Serial.println("Initialization complete");
 }
 
 void loop() {
+  // Get distance reading from ultrasonic sensor
   int distance = sonar.ping_cm();
   
+  // Check if object is within detection range (0-20cm)
   if (distance > 0 && distance < 20) {
+    // Only process if no recent detection or timeout has passed (debouncing)
     if (!clothDetected || (millis() - lastDetectionTime > DETECTION_TIMEOUT)) {
       clothDetected = true;
       lastDetectionTime = millis();
-      digitalWrite(LED_PIN, HIGH);
+      digitalWrite(LED_PIN, HIGH);  // Turn on presence detection LED
       
-      // Check for white shirt without showing "Scanning..."
+      // Scan for white shirt and update detection status
       isWhiteShirtDetected = scanForWhiteShirt();
       
-      // Control white shirt LED
+      // Control white shirt indicator LED based on detection
       digitalWrite(WHITE_LED_PIN, isWhiteShirtDetected ? HIGH : LOW);
       
-      // Update display based on detection result
+      // Update LCD display with detection results
       lcd.clear();
       if (isWhiteShirtDetected) {
         lcd.print("White shirt");
@@ -69,47 +78,56 @@ void loop() {
       }
     }
   } else {
+    // Reset system state when no object is detected
     clothDetected = false;
     isWhiteShirtDetected = false;
     digitalWrite(LED_PIN, LOW);
-    digitalWrite(WHITE_LED_PIN, LOW);  // Turn off white shirt LED
+    digitalWrite(WHITE_LED_PIN, LOW);
     lcd.clear();
     lcd.print("System Ready");
   }
   
-  delay(50);
+  delay(50);  // Small delay to prevent excessive processing
 }
 
+// Function to detect white shirt using Pixy camera
 bool scanForWhiteShirt() {
-  int successfulScans = 0;
+  int successfulScans = 0;     // Counter for successful white shirt detections
   
+  // Perform multiple scan attempts for reliable detection
   for (int attempt = 0; attempt < SCAN_ATTEMPTS; attempt++) {
-    uint16_t blocks = pixy.getBlocks();
+    uint16_t blocks = pixy.getBlocks();  // Get detected objects from Pixy
     
     if (blocks) {
+      // Check each detected block
       for (uint16_t i = 0; i < blocks; i++) {
+        // Verify if block matches white shirt criteria (signature and size)
         if (pixy.blocks[i].signature == whiteShirtSignature && 
             pixy.blocks[i].width > MIN_BLOCK_SIZE && 
             pixy.blocks[i].height > MIN_BLOCK_SIZE) {
           successfulScans++;
           
+          // Log detection details for debugging
           Serial.print("Block detected - Width: ");
           Serial.print(pixy.blocks[i].width);
           Serial.print(" Height: ");
           Serial.println(pixy.blocks[i].height);
           
-          break;
+          break;  // Exit current scan if white shirt is detected
         }
       }
     }
-    delay(50);
+    delay(50);  // Brief delay between scan attempts
   }
   
+  // Determine final detection result (majority of scans must be successful)
   bool detected = successfulScans > SCAN_ATTEMPTS/2;
+  
+  // Log final detection results
   Serial.print("Detection result: ");
   Serial.println(detected ? "White shirt detected" : "No white shirt found");
   Serial.print("Successful scans: ");
   Serial.println(successfulScans);
   
-  return detected;
+  return detected;
 }
